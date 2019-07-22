@@ -1,46 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int argc, char** argv)
-{
-  if (argc == 1) {
-    printf("USAGE: %s file1 [file2...]\n", argv[0]);
-    exit(EXIT_FAILURE);
+FILE* open_file(char* filename) {
+  FILE* fp = fopen(filename, "r");
+  if (fp == NULL) {
+    printf("wget: cannot open file\n");
+    exit(1);
   }
 
-  FILE* fd;
-  int c;
-  int last;
-  int count;
-  for (int i = 1; i < argc; i++) {
-    fd = fopen(argv[i], "r");
-    if (!fd) {
-      perror("fopen");
-      exit(EXIT_FAILURE);
-    }
+  return fp;
+}
 
-    c = last = fgetc(fd);
-    count = 0;
-    while (c != EOF) {
-      if (c != last) {
-        fwrite(&count, sizeof(int), 1, stdout);
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    printf("wzip: file1 [file2 ...]\n");
+    exit(1);
+  }
+
+  FILE* fp;
+  int c = 0;
+  int last = -1;
+  int counter = 0;
+  for (int i = 1; i < argc; i++) {
+    fp = open_file(argv[i]);
+
+    while ((c = fgetc(fp)) != EOF) {
+      if (last == -1) {
+        last = c;
+        counter++;
+      } else if (c != last) {
+        fwrite(&counter, sizeof(int), 1, stdout);
         fputc(last, stdout);
-        count = 1;
+        counter = 1;
       } else {
-        count++;
+        counter++;
       }
 
       last = c;
-      c = fgetc(fd);
     }
 
-    if (ferror(fd)) {
-      perror("fgetc");
-      fclose(fd);
-      exit(EXIT_FAILURE);
-    }
+    fclose(fp);
+  }
 
-    fclose(fd);
+  if (counter > 0) {
+    fwrite(&counter, sizeof(int), 1, stdout);
+    fputc(last, stdout);
   }
 
   return 0;
