@@ -4,7 +4,7 @@
 FILE* open_file(char* filename) {
   FILE* fp = fopen(filename, "r");
   if (fp == NULL) {
-    printf("wget: cannot open file\n");
+    printf("wzip: cannot open file\n");
     exit(1);
   }
 
